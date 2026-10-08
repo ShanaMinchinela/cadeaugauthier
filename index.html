@@ -15,21 +15,19 @@
             margin: 0;
             user-select: none;
             -webkit-user-select: none;
-            overflow-x: hidden;
         }
         .container {
             background: white;
-            padding: 30px 20px;
+            padding: 25px 15px;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-            max-width: 420px;
+            max-width: 400px;
             width: 90%;
             text-align: center;
-            position: relative;
-            z-index: 10;
+            box-sizing: border-box;
         }
-        h1 { color: #ff4757; font-size: 24px; margin-bottom: 15px; }
-        p { color: #7f8c8d; font-size: 16px; line-height: 1.5; margin-bottom: 25px; }
+        h1 { color: #ff4757; font-size: 22px; margin-bottom: 10px; }
+        p { color: #7f8c8d; font-size: 15px; line-height: 1.4; margin-bottom: 20px; }
         
         button {
             padding: 12px 30px;
@@ -40,45 +38,15 @@
             font-weight: bold;
             background-color: #ff4757;
             color: white;
-            transition: transform 0.2s, background-color 0.2s;
-        }
-        button:hover { 
-            transform: scale(1.05); 
-            background-color: #ff6b81;
         }
 
         .scratch-container {
             position: relative;
-            width: 300px;
-            height: 250px;
+            width: 280px;
+            height: 240px;
             margin: 0 auto;
             border-radius: 15px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
-        }
-        
-        /* Cadre ajusté : s'adapte automatiquement à la taille de tout le texte sans couper */
-        .secret-content {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
             background: #fff9fa;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            font-size: 17px; 
-            color: #ff4757; 
-            line-height: 1.5;
-            box-sizing: border-box;
-            padding: 15px;
-            overflow-y: auto; 
-            opacity: 0;
-            transition: opacity 0.8s ease;
-        }
-        .secret-content.show {
-            opacity: 1;
         }
         
         #scratch-canvas {
@@ -86,44 +54,56 @@
             top: 0;
             left: 0;
             cursor: pointer;
-            z-index: 2;
-            touch-action: none; /* Bloque le scroll mobile au toucher */
+            touch-action: none; /* Bloque le scroll mobile obligatoire */
         }
+
+        /* Message final en dehors du cadre du ticket pour ne JAMAIS être coupé */
+        .final-box {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            color: #ff4757;
+            font-size: 18px;
+            line-height: 1.6;
+            animation: fadeIn 0.6s ease forwards;
+        }
+        .final-box strong { font-size: 22px; display: block; margin-bottom: 10px; }
 
         .hidden { display: none !important; }
         
-        .step {
-            animation: fadeIn 0.5s ease forwards;
-        }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
-    <!-- Chargement propre de la bibliothèque de confettis -->
+    <!-- Chargement officiel des confettis -->
     <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
     <div class="container">
         <!-- ÉTAPE 1 : Accueil -->
-        <div id="step-intro" class="step">
+        <div id="step-intro">
             <p>Ton sourire est déjà à tomber… voyons si la chance va te sourire en retour aujourd’hui...</p>
             <button onclick="lancerJeu()">Jouer</button>
         </div>
 
-        <!-- ÉTAPE 2 : Le Ticket & Message -->
-        <div id="step-game" class="step hidden">
-            <h1>Un petit ticket pour toi 🪙</h1>
-            <p>Gratte le cœur rose avec ton doigt ou ta souris !</p>
+        <!-- ÉTAPE 2 : Zone du jeu -->
+        <div id="step-game" class="hidden">
+            <div id="game-text">
+                <h1>Un petit ticket pour toi 🪙</h1>
+                <p>Gratte le cœur rose avec ton doigt ou ta souris !</p>
+            </div>
             
             <div class="scratch-container">
-                <div class="secret-content" id="message-final">
-                    <strong>Félicitation Gauthier ! 🎉</strong><br><br>
-                    <span>Ton lot : moi — aka le plus beau cadeau de ta vie. ✨</span><br><br>
-                    <span>Ne me remercie pas, je sais que tu rêvais d’avoir une BFF comme moi. 🫶🏻</span>
-                </div>
-                <canvas id="scratch-canvas" width="300" height="250"></canvas>
+                <canvas id="scratch-canvas" width="280" height="240"></canvas>
+            </div>
+
+            <!-- ÉTAPE 3 : Révélation complète en dessous -->
+            <div id="message-final" class="final-box">
+                <strong>Félicitation Gauthier ! 🎉</strong>
+                Ton lot : moi — aka le plus beau cadeau de ta vie. ✨<br><br>
+                Ne me remercie pas, je sais que tu rêvais d’avoir une BFF comme moi. 🫶🏻
             </div>
         </div>
     </div>
@@ -137,12 +117,10 @@
         function lancerJeu() {
             document.getElementById('step-intro').classList.add('hidden');
             document.getElementById('step-game').classList.remove('hidden');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
             initialiserCoeurRose();
         }
 
         function dessinerCoeur(ctx, x, y, largeur, hauteur, couleur) {
-            ctx.save();
             ctx.beginPath();
             ctx.moveTo(x, y + hauteur / 4);
             ctx.quadraticCurveTo(x, y, x + largeur / 4, y);
@@ -156,37 +134,39 @@
             ctx.closePath();
             ctx.fillStyle = couleur;
             ctx.fill();
-            ctx.restore();
         }
 
         function initialiserCoeurRose() {
-            dessinerCoeur(ctx, 40, 20, 220, 200, '#ff8fa3');
+            // Dessin du cœur rose centré
+            dessinerCoeur(ctx, 30, 15, 220, 200, '#ff8fa3');
             
+            // Paillettes
             ctx.globalCompositeOperation = 'source-atop'; 
             ctx.fillStyle = '#ff4d6d';
-            for(let i=0; i<600; i++) {
+            for(let i=0; i<500; i++) {
                 ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
             }
 
+            // Texte d'instruction
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 20px "Segoe UI", sans-serif';
             ctx.textAlign = 'center';
-            ctx.fillText("Gratte ici", canvas.width / 2, 120);
-
+            ctx.fillText("Gratte ici", canvas.width / 2, 115);
             ctx.globalCompositeOperation = 'source-over';
         }
 
-        // Système de détection universel corrigé (Souris + Tactile Mobile réactif)
-        function getCoords(e) {
+        // Détection universelle ultra-précise (Mobiles + PC)
+        function obtenirPositions(e) {
             const rect = canvas.getBoundingClientRect();
-            let clientX, clientY;
-            
-            if (e.changedTouches && e.changedTouches.length > 0) {
-                clientX = e.changedTouches[0].clientX;
-                clientY = e.changedTouches[0].clientY;
-            } else if (e.touches && e.touches.length > 0) {
+            letclientX = 0;
+            letclientY = 0;
+
+            if (e.touches && e.touches.length > 0) {
                 clientX = e.touches[0].clientX;
                 clientY = e.touches[0].clientY;
+            } else if (e.changedTouches && e.changedTouches.length > 0) {
+                clientX = e.changedTouches[0].clientX;
+                clientY = e.changedTouches[0].clientY;
             } else {
                 clientX = e.clientX;
                 clientY = e.clientY;
@@ -194,77 +174,60 @@
             return { x: clientX - rect.left, y: clientY - rect.top };
         }
 
-        function scratch(e) {
+        function gratter(e) {
             if (!isDrawing) return;
-            if (e.cancelable) e.preventDefault(); 
-            const coords = getCoords(e);
+            const pos = obtenirPositions(e);
             
             ctx.globalCompositeOperation = 'destination-out';
             ctx.beginPath();
-            ctx.arc(coords.x, coords.y, 25, 0, Math.PI * 2);
+            ctx.arc(pos.x, pos.y, 25, 0, Math.PI * 2);
             ctx.fill();
-            verifierPourcentage();
+            
+            verifierGrattage();
         }
 
-        // Événements Souris (Ordinateur)
-        canvas.addEventListener('mousedown', (e) => { isDrawing = true; scratch(e); });
-        canvas.addEventListener('mousemove', scratch);
+        // Événements Souris (PC)
+        canvas.addEventListener('mousedown', (e) => { isDrawing = true; gratter(e); });
+        canvas.addEventListener('mousemove', gratter);
         window.addEventListener('mouseup', () => isDrawing = false);
 
-        // Événements Tactiles (Smartphones iOS/Android corrigés)
-        canvas.addEventListener('touchstart', (e) => { isDrawing = true; scratch(e); }, { passive: false });
-        canvas.addEventListener('touchmove', (e) => { scratch(e); }, { passive: false });
-        canvas.addEventListener('touchend', () => isDrawing = false);
-        canvas.addEventListener('touchcancel', () => isDrawing = false);
+        // Événements Tactiles (Mobiles)
+        canvas.addEventListener('touchstart', (e) => { isDrawing = true; gratter(e); });
+        canvas.addEventListener('touchmove', (e) => { if(e.cancelable) e.preventDefault(); gratter(e); }, { passive: false });
+        window.addEventListener('touchend', () => isDrawing = false);
 
-        function verifierPourcentage() {
+        function verifierGrattage() {
             if (verifLancee) return;
             const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-            let pixelsRestants = 0;
+            let restants = 0;
             
             for (let i = 3; i < imgData.data.length; i += 4) {
-                if (imgData.data[i] > 0) pixelsRestants++;
+                if (imgData.data[i] > 0) restants++;
             }
             
-            if (pixelsRestants < 14000) {
+            // Si 60% du cœur est effacé
+            if (restants < 15000) {
                 verifLancee = true;
-                
-                canvas.style.transition = 'opacity 0.5s ease';
+                canvas.style.transition = 'opacity 0.4s ease';
                 canvas.style.opacity = '0';
                 
                 setTimeout(() => {
                     canvas.classList.add('hidden');
-                    document.getElementById('message-final').classList.add('show');
+                    document.getElementById('game-text').classList.add('hidden');
+                    document.getElementById('message-final').style.display = 'block';
                     
-                    // Lancement des grosses rafales de confettis pleines écrans
-                    eclaterConfettis();
-                }, 500);
+                    // Lancement des confettis
+                    lancerFeuArtifice();
+                }, 400);
             }
         }
 
-        function eclaterConfettis() {
-            let duree = 3 * 1000;
-            let fin = Date.now() + duree;
-
+        function lancerFeuArtifice() {
+            let fin = Date.now() + 3000;
             (function frame() {
-                confetti({
-                    particleCount: 5,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0, y: 0.8 },
-                    colors: ['#ff4757', '#ff6b81', '#fffff0']
-                });
-                confetti({
-                    particleCount: 5,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1, y: 0.8 },
-                    colors: ['#ff4757', '#ff6b81', '#fffff0']
-                });
-
-                if (Date.now() < fin) {
-                    requestAnimationFrame(frame);
-                }
+                confetti({ particleCount: 4, angle: 60, spread: 55, origin: { x: 0, y: 0.8 } });
+                confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1, y: 0.8 } });
+                if (Date.now() < fin) requestAnimationFrame(frame);
             }());
         }
     </script>
