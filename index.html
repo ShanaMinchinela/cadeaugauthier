@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Une surprise pour toi...</title>
+    <style>
+        body {
+            background-color: #fff0f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            max-width: 420px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+        h1 { color: #ff4757; font-size: 24px; margin-bottom: 15px; }
+        p { color: #7f8c8d; font-size: 16px; line-height: 1.5; margin-bottom: 25px; }
+        
+        /* Bouton Jouer */
+        button {
+            padding: 12px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            background-color: #ff4757;
+            color: white;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        button:hover { 
+            transform: scale(1.05); 
+            background-color: #ff6b81;
+        }
+
+        .scratch-container {
+            position: relative;
+            width: 300px;
+            height: 250px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .secret-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fff9fa;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px; 
+            color: #ff4757; 
+            line-height: 1.6;
+            box-sizing: border-box;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+        .secret-content.show {
+            opacity: 1;
+        }
+        
+        #scratch-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .hidden { display: none !important; }
+        
+        .step {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+    <!-- Script pour les confettis en forme de cœurs -->
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body>
+
+    <div class="container">
+        <!-- ÉTAPE 1 : Accueil avec le bouton Jouer -->
+        <div id="step-intro" class="step">
+            <p>Ton sourire est déjà à tomber… voyons si la chance va te sourire en retour aujourd’hui...</p>
+            <button onclick="lancerJeu()">Jouer</button>
+        </div>
+
+        <!-- ÉTAPE 2 & 3 : Le Ticket & Message (Masqués au départ) -->
+        <div id="step-game" class="step hidden">
+            <h1>Un petit ticket pour toi 🪙</h1>
+            <p>Gratte le cœur rose avec ton doigt ou ta souris !</p>
+            
+            <div class="scratch-container">
+                <!-- Message final secret -->
+                <div class="secret-content" id="message-final">
+                    <strong>Félicitation Gauthier ! 🎉</strong><br><br>
+                    <span>Ton lot : moi — aka le plus beau cadeau de ta vie. ✨</span><br><br>
+                    <span>Ne me remercie pas, je sais que tu rêvais d’avoir une BFF comme moi. 🫶🏻</span>
+                </div>
+                <canvas id="scratch-canvas" width="300" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('scratch-canvas');
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let verifLancee = false;
+
+        function lancerJeu() {
+            // Basculer les écrans d'affichage
+            document.getElementById('step-intro').classList.add('hidden');
+            document.getElementById('step-game').classList.remove('hidden');
+            
+            // Initialiser et dessiner le cœur rose une fois l'élément affiché
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            initialiserCoeurRose();
+        }
+
+        function dessinerCoeur(ctx, x, y, largeur, hauteur, couleur) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.moveTo(x, y + hauteur / 4);
+            ctx.quadraticCurveTo(x, y, x + largeur / 4, y);
+            ctx.quadraticCurveTo(x + largeur / 2, y, x + largeur / 2, y + hauteur / 4);
+            ctx.quadraticCurveTo(x + largeur / 2, y, x + largeur * 3/4, y);
+            ctx.quadraticCurveTo(x + largeur, y, x + largeur, y + hauteur / 4);
+            ctx.quadraticCurveTo(x + largeur, y + hauteur / 2, x + largeur * 3/4, y + hauteur * 3/4);
+            ctx.lineTo(x + largeur / 2, y + hauteur);
+            ctx.lineTo(x + largeur / 4, y + hauteur * 3/4);
+            ctx.quadraticCurveTo(x, y + hauteur / 2, x, y + hauteur / 4);
+            ctx.closePath();
+            ctx.fillStyle = couleur;
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function initialiserCoeurRose() {
+            // 1. Dessiner le cœur rose poudré
+            dessinerCoeur(ctx, 40, 20, 220, 200, '#ff8fa3');
+            
+            // 2. Texture pailletée rose foncé
+            ctx.globalCompositeOperation = 'source-atop'; 
+            ctx.fillStyle = '#ff4d6d';
+            for(let i=0; i<600; i++) {
+                ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
+            }
+
+            // 3. Écriture du texte "Gratte ici" bien centré
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 20px "Segoe UI", sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText("Gratte ici", canvas.width / 2, 120);
+
+            ctx.globalCompositeOperation = 'source-over';
+        }
+
+        // Gestion du grattage (Souris & Mobile)
+        function getCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches.clientX : e.clientX;
+            const clientY = e.touches ? e.touches.clientY : e.clientY;
+            return { x: clientX - rect.left, y: clientY - rect.top };
+        }
+
+        function scratch(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const coords = getCoords(e);
+            
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.beginPath();
+            ctx.arc(coords.x, coords.y, 25, 0, Math.PI * 2);
+            ctx.fill();
+            verifierPourcentage();
+        }
+
+        canvas.addEventListener('mousedown', (e) => { isDrawing = true; scratch(e); });
+        canvas.addEventListener('mousemove', scratch);
+        window.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('touchstart', (e) => { isDrawing = true; scratch(e); });
+        canvas.addEventListener('touchmove', scratch);
+        window.addEventListener('touchend', () => isDrawing = false);
+
+        function verifierPourcentage() {
+            if (verifLancee) return;
+            const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            let pixelsRestants = 0;
+            
+            for (let i = 3; i < imgData.data.length; i += 4) {
+                if (imgData.data[i] > 0) pixelsRestants++;
+            }
+            
+            // Validation du grattage si le cœur est bien entamé
+            if (pixelsRestants < 12000) {
+                verifLancee = true;
+                
+                canvas.style.transition = 'opacity 0.5s ease';
+                canvas.style.opacity = '0';
+                
+                setTimeout(() => {
+                    canvas.classList.add('hidden');
+                    document.getElementById('message-final').classList.add('show');
+                    
+                    // Pluie de confettis en rafale
+                    lancerConfettis();
+                    setTimeout(lancerConfettis, 300);
+                    setTimeout(lancerConfettis, 600);
+                }, 500);
+            }
+        }
+
+        function lancerConfettis() {
+            const defaults = { spread: 360, ticks: 100, gravity: 0.8, decay: 0.94, startVelocity: 30, colors: ['#ff4757', '#ff6b81', '#ff7f50'] };
+            confetti({ ...defaults, particleCount: 50, scalar: 1.2, shapes: ['heart'] });
+            confetti({ ...defaults, particleCount: 30, scalar: 0.8 });
+        }
+    </script>
+</body>
+</html>
