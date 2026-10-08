@@ -6,7 +6,7 @@
     <title>Une surprise pour toi...</title>
     <style>
         body {
-            background-color: #fff0f5;
+            background-color: #ff4d4d; /* 🔴 Fond rouge principal */
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             justify-content: center;
@@ -18,16 +18,16 @@
         }
         .container {
             background: white;
-            padding: 25px 15px;
+            padding: 30px 20px;
             border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
             max-width: 400px;
             width: 90%;
             text-align: center;
             box-sizing: border-box;
         }
-        h1 { color: #ff4757; font-size: 22px; margin-bottom: 10px; }
-        p { color: #7f8c8d; font-size: 15px; line-height: 1.4; margin-bottom: 20px; }
+        h1 { color: #d63031; font-size: 24px; margin-bottom: 15px; }
+        p { color: #2d3436; font-size: 16px; line-height: 1.5; margin-bottom: 25px; }
         
         button {
             padding: 12px 30px;
@@ -36,8 +36,13 @@
             border-radius: 25px;
             cursor: pointer;
             font-weight: bold;
-            background-color: #ff4757;
+            background-color: #ff4d4d; /* 🔴 Bouton rouge */
             color: white;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        button:hover {
+            transform: scale(1.05);
+            background-color: #e63946;
         }
 
         .scratch-container {
@@ -46,7 +51,6 @@
             height: 240px;
             margin: 0 auto;
             border-radius: 15px;
-            background: #fff9fa;
         }
         
         #scratch-canvas {
@@ -54,20 +58,18 @@
             top: 0;
             left: 0;
             cursor: pointer;
-            touch-action: none; /* Bloque le scroll mobile obligatoire */
+            touch-action: none;
         }
 
-        /* Message final en dehors du cadre du ticket pour ne JAMAIS être coupé */
         .final-box {
             display: none;
-            margin-top: 15px;
-            padding: 15px;
-            color: #ff4757;
+            color: #d63031;
             font-size: 18px;
             line-height: 1.6;
+            padding: 10px;
             animation: fadeIn 0.6s ease forwards;
         }
-        .final-box strong { font-size: 22px; display: block; margin-bottom: 10px; }
+        .final-box strong { font-size: 24px; display: block; margin-bottom: 15px; }
 
         .hidden { display: none !important; }
         
@@ -75,9 +77,16 @@
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        .confetti-particle {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 999;
+            pointer-events: none;
+            border-radius: 50%;
+        }
     </style>
-    <!-- Chargement officiel des confettis -->
-    <script src="https://jsdelivr.net"></script>
 </head>
 <body>
 
@@ -92,19 +101,19 @@
         <div id="step-game" class="hidden">
             <div id="game-text">
                 <h1>Un petit ticket pour toi 🪙</h1>
-                <p>Gratte le cœur rose avec ton doigt ou ta souris !</p>
+                <p>Gratte le cœur avec ton doigt ou ta souris !</p>
             </div>
             
-            <div class="scratch-container">
+            <div class="scratch-container" id="canvas-holder">
                 <canvas id="scratch-canvas" width="280" height="240"></canvas>
             </div>
+        </div>
 
-            <!-- ÉTAPE 3 : Révélation complète en dessous -->
-            <div id="message-final" class="final-box">
-                <strong>Félicitation Gauthier ! 🎉</strong>
-                Ton lot : moi — aka le plus beau cadeau de ta vie. ✨<br><br>
-                Ne me remercie pas, je sais que tu rêvais d’avoir une BFF comme moi. 🫶🏻
-            </div>
+        <!-- ÉTAPE 3 : Révélation complète -->
+        <div id="message-final" class="final-box">
+            <strong>Félicitation Gauthier ! 🎉</strong>
+            Ton lot : moi — aka le plus beau cadeau de ta vie. ✨<br><br>
+            Ne me remercie pas, je sais que tu rêvais d’avoir une BFF comme moi. 🫶🏻
         </div>
     </div>
 
@@ -137,17 +146,15 @@
         }
 
         function initialiserCoeurRose() {
-            // Dessin du cœur rose centré
-            dessinerCoeur(ctx, 30, 15, 220, 200, '#ff8fa3');
+            // Dessin du cœur rouge/rose vif pour bien trancher avec le conteneur blanc
+            dessinerCoeur(ctx, 30, 15, 220, 200, '#ff4d6d');
             
-            // Paillettes
             ctx.globalCompositeOperation = 'source-atop'; 
-            ctx.fillStyle = '#ff4d6d';
+            ctx.fillStyle = '#d63031';
             for(let i=0; i<500; i++) {
                 ctx.fillRect(Math.random()*canvas.width, Math.random()*canvas.height, 2, 2);
             }
 
-            // Texte d'instruction
             ctx.fillStyle = '#ffffff';
             ctx.font = 'bold 20px "Segoe UI", sans-serif';
             ctx.textAlign = 'center';
@@ -155,11 +162,10 @@
             ctx.globalCompositeOperation = 'source-over';
         }
 
-        // Détection universelle ultra-précise (Mobiles + PC)
         function obtenirPositions(e) {
             const rect = canvas.getBoundingClientRect();
-            letclientX = 0;
-            letclientY = 0;
+            let clientX = 0;
+            let clientY = 0;
 
             if (e.touches && e.touches.length > 0) {
                 clientX = e.touches[0].clientX;
@@ -186,12 +192,10 @@
             verifierGrattage();
         }
 
-        // Événements Souris (PC)
         canvas.addEventListener('mousedown', (e) => { isDrawing = true; gratter(e); });
         canvas.addEventListener('mousemove', gratter);
         window.addEventListener('mouseup', () => isDrawing = false);
 
-        // Événements Tactiles (Mobiles)
         canvas.addEventListener('touchstart', (e) => { isDrawing = true; gratter(e); });
         canvas.addEventListener('touchmove', (e) => { if(e.cancelable) e.preventDefault(); gratter(e); }, { passive: false });
         window.addEventListener('touchend', () => isDrawing = false);
@@ -205,30 +209,52 @@
                 if (imgData.data[i] > 0) restants++;
             }
             
-            // Si 60% du cœur est effacé
-            if (restants < 15000) {
+            if (restants < 14000) {
                 verifLancee = true;
-                canvas.style.transition = 'opacity 0.4s ease';
-                canvas.style.opacity = '0';
+                document.getElementById('step-game').classList.add('hidden');
                 
-                setTimeout(() => {
-                    canvas.classList.add('hidden');
-                    document.getElementById('game-text').classList.add('hidden');
-                    document.getElementById('message-final').style.display = 'block';
-                    
-                    // Lancement des confettis
-                    lancerFeuArtifice();
-                }, 400);
+                const messageFinal = document.getElementById('message-final');
+                messageFinal.style.display = 'block';
+                
+                lancerConfettisMaison();
             }
         }
 
-        function lancerFeuArtifice() {
-            let fin = Date.now() + 3000;
-            (function frame() {
-                confetti({ particleCount: 4, angle: 60, spread: 55, origin: { x: 0, y: 0.8 } });
-                confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1, y: 0.8 } });
-                if (Date.now() < fin) requestAnimationFrame(frame);
-            }());
+        function lancerConfettisMaison() {
+            const couleurs = ['#ff4757', '#ff6b81', '#ff7f50', '#ffffff', '#ffd1dc'];
+            for (let i = 0; i < 100; i++) {
+                setTimeout(() => {
+                    const p = document.createElement('div');
+                    p.classList.add('confetti-particle');
+                    p.style.backgroundColor = couleurs[Math.floor(Math.random() * couleurs.length)];
+                    p.style.left = Math.random() * window.innerWidth + 'px';
+                    p.style.top = '-10px';
+                    
+                    const taille = Math.random() * 8 + 6;
+                    p.style.width = taille + 'px';
+                    p.style.height = taille + 'px';
+                    if (Math.random() > 0.5) p.style.borderRadius = '0';
+                    
+                    document.body.appendChild(p);
+                    
+                    let positionY = -10;
+                    let vitesse = Math.random() * 4 + 3;
+                    let dérive = Math.random() * 2 - 1;
+                    let positionX = parseFloat(p.style.left);
+                    
+                    let intervalChute = setInterval(() => {
+                        positionY += vitesse;
+                        positionX += dérive;
+                        p.style.top = positionY + 'px';
+                        p.style.left = positionX + 'px';
+                        
+                        if (positionY > window.innerHeight) {
+                            clearInterval(intervalChute);
+                            p.remove();
+                        }
+                    }, 20);
+                }, Math.random() * 2500);
+            }
         }
     </script>
 </body>
